@@ -1,0 +1,148 @@
+<script>
+  var ask = true;
+  var filter = {
+    minAge: null,
+    maxAge: null,
+    maxWeight: null,
+    requireAge: null,
+    requireWeight: null
+  };
+
+  var cachedFilter = null;
+  try { cachedFilter = window.localStorage.getItem('zfilter'); } catch(e) { }
+  if (cachedFilter) {
+    if (window.confirm('Apply saved filter (OK) or create new filter (Cancel)?\n\n' + cachedFilter)) {
+      filter = JSON.parse(cachedFilter);
+      ask = false;
+    }
+  }
+
+  if (ask) {
+    filter.minAge = window.prompt("Min age - press cancel or enter blank if you don't have a min age requirement");
+    filter.maxAge = window.prompt("Max age - press cancel or enter blank if you don't have a max age requirement");
+    filter.maxWeight = window.prompt("Max weight - press cancel or enter blank if you don't have a max weight requirement");
+    filter.requireAge = window.confirm("Require age? OK = yes, Cancel = no");
+    filter.requireWeight = window.confirm("Require weight? OK = yes, Cancel = no");
+
+    try { window.localStorage.setItem('zfilter', JSON.stringify(filter)); } catch(e) { }
+  }
+
+  function parse(str) {
+    var ar = str.split(', ');
+
+    var age = null;
+    var heightFt = null;
+    var heightIn = null;
+    var weight = null;
+    var position = null;
+
+    ar.forEach(function(s) {
+      var ageMatch = s.match(/^\d+$/);
+      var heightMatch = s.match(/^\d+'\d+"$/);
+      var weightMatch = s.match(/^\d+lb/);
+      var positionMatch = s.match(/top$|bottom$|^vers|^side/);
+
+      if (ageMatch) {
+        age = parseInt(ageMatch[0], 10);
+      }
+
+      if (heightMatch) {
+        var tmp = s.split("'");
+        heightFt = parseInt(tmp[0], 10);
+        heightIn = parseInt(tmp[1], 10);
+      }
+
+      if (weightMatch) {
+        weight = parseInt(weightMatch[0], 10);
+      }
+
+      if (positionMatch) {
+        position = s;
+      }
+    });
+
+    return { age, heightFt, heightIn, weight, position };
+  };
+
+  function keep(str) {
+    var attrs = parse(str);
+
+    if (filter.requireAge && !attrs.age) return false;
+    if (filter.requireWeight && !attrs.weight) return false;
+
+    if (filter.minAge && attrs.age && attrs.age < filter.minAge) return false;
+    if (filter.maxAge && attrs.age && attrs.age > filter.maxAge) return false;
+    
+    if (filter.maxWeight && attrs.weight && attrs.weight > filter.maxWeight) return false;
+
+    return true;
+  };
+
+  document.querySelectorAll('.mgl-marker').forEach(function(el) { el.style.display = ''; });
+
+  document.querySelectorAll('.headline-preview .title-tag').forEach(function(el) {
+    if (!keep(el.innerText)) el.closest('.mgl-marker').style.display = 'none';
+  });
+
+
+  window.TESTING = [
+    '25, 5\'10", fit, top, discreet/guy next door',
+    '26, 6\'0", 165lb, 5.5" uncut, fit, gay, vers bottom, clean cut',
+    '32, 5\'11", 180lb, 6.5" cut, average, gay, vers, leather/corporate',
+    '38, 5\'7", 160lb, 7" uncut, fit, gay, vers',
+    '65, 6\'0", 165lb, 7.5" cut, fit, side, guy next door',
+    '28, 5\'8", 155lb, average, gay, bottom',
+    '44, 6\'3", 185lb, 7.5" cut, average, gay, submissive bottom, geek',
+    '5\'9", 200lb, bi, vers',
+    '21, 5\'4", 135lb, 5" cut, vers bottom, gaymer/son',
+    '35, 5\'8", 190lb, 7.5" uncut, average',
+    '20, 5\'7", stocky',
+    '29, 5\'8", 255lb, 6" uncut, chubby, bi, vers bottom, gaymer',
+    '39, 5\'9", 155lb, 7.5" uncut, average, gay',
+    '63, 6\'2", 170lb, 9.5" cut, average, gay, vers top, surfer/gaymer',
+    '33, average, gay, vers',
+    '27, 5\'8", 160lb, average, vers',
+    '35, 5\'11", 190lb, gay, bottom, discreet',
+    '42, 6\'1", 195lb, 8" cut, average',
+    '5\'8", 165lb, chubby, vers top, gaymer/daddy',
+    '21, 5\'10", 6" uncut, gay, vers',
+    '22, 5\'8", 120lb, slim, bicurious, vers, twink/gaymer',
+    '34, 6\'0", 6.5" uncut, average, gay',
+    '36, 5\'5", 175lb, stocky, submissive bottom',
+    '64, 6\'0", 225lb, 6" cut, chubby, bi, vers, daddy/clean cut',
+    '5\'10", 170lb, 6.5" cut, average, gay, top, daddy/guy next door',
+    '33, 6\'0", 150lb, 7.5" cut, fit, top',
+    '5\'8", 165lb, average, gay, top, clean cut/discreet',
+    '33, 5\'10", 180lb, 7" cut, fit, gay, dom top (breeder), clean cut/geek',
+    '33, 5\'7", 170lb, 6.5" uncut, average, bi, vers bottom',
+    '6\'4", 190lb, 8.5" cut, muscular, bi, vers bottom, corporate',
+    '27, 6\'1", 7" cut, vers bottom',
+    '46, 5\'11", 195lb, 7.5" cut, average, bi, top, daddy/guy next door',
+    '27, 6\'1", 7" cut',
+    '40, 5\'10", 160lb, 6" cut, average, gay, vers, geek/otter',
+    '44, 6\'4", 270lb, 9" cut, large, gay, top, bear/daddy',
+    '52, 5\'7", 185lb, 6" cut, average, bicurious, side, discreet',
+    '40, 5\'11", 195lb, average, gay, submissive bottom, geek/discreet',
+    '38, 5\'10", 230lb, stocky, gay, vers bottom, bear/corporate',
+    '40, 5\'10", 165lb, average, gay, submissive bottom, geek/guy next door',
+    '35, 5\'10", 165lb, 7" uncut, fit, top',
+    '36, 6\'2", 195lb, muscular, gay, vers',
+    '51, 5\'9", 155lb, 7" uncut, fit, gay, vers top, guy next door/jock',
+    '40',
+    '37, 5\'6", 160lb, average, gay, passive top',
+    '43, 6\'2", 185lb, 7" cut, average, gay',
+    '28, 5\'7", 180lb, average',
+    '34, 5\'10", 145lb, 7" uncut, slim, bi, top, otter/guy next door',
+    '6\'4", 180lb, average, gay, vers bottom, daddy/guy next door',
+    '5\'10", 190lb, average',
+    '32, 5\'5", 145lb, 7" cut, fit, gay, vers',
+    '35, 6\'0", 220lb, 6.5" uncut, vers, rugged/discreet',
+    'Bi, vers top',
+    '37, 6\'1", 215lb, 7" cut, vers, guy next door/geek',
+    '30, 5\'9", large',
+    '43, 6\'3", 220lb, vers bottom',
+    '32, 5\'7", 135lb, 6" uncut, slim, gay, vers bottom',
+    '57, 5\'9", 170lb, 6.5" cut, fit'
+  ];
+  window.TESTING.forEach(function(str) { console.log(/*str, */ parse(str), keep(str)); });
+</script>
